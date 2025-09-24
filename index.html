@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart AI Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 450px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .bot-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff6b6b, #feca57);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      font-size: 24px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .chat-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 400;
+    }
+
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .chat-container {
+      height: 500px;
+      position: relative;
+      background: #fafafa;
+    }
+
+    #webchat {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .loading-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #ef4444;
+      font-size: 14px;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 10px;
+        border-radius: 15px;
+      }
+      
+      .chat-container {
+        height: 450px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chat-header">
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span>Online</span>
+      </div>
+      <div class="header-content">
+        <div class="bot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="chat-title">Smart AI Assistant</div>
+        <div class="chat-subtitle">Powered by Rasa • Always here to help</div>
+      </div>
+    </div>
+    
+    <div class="chat-container">
+      <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Connecting to AI...</div>
+      </div>
+      <div class="error-message" id="errorMessage">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Unable to connect to chatbot server</p>
+        <small>Please ensure Rasa server is running on localhost:5005</small>
+      </div>
+      <div id="webchat"></div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced Rasa webchat integration
+    (function() {
+      const loadingScreen = document.getElementById('loadingScreen');
+      const errorMessage = document.getElementById('errorMessage');
+      
+      // Load Rasa webchat script
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/rasa-webchat@1.x.x/lib/index.js';
+      script.async = true;
+      
+      script.onload = function() {
+        try {
+          window.WebChat.default({
+            // Connection settings
+            socketUrl: 'http://localhost:5005',
+            socketPath: '/socket.io/',
+            
+            // Initial setup
+            initPayload: '/greet',
+            customData: { 
+              language: 'en',
+              userId: 'user_' + Math.random().toString(36).substr(2, 9)
+            },
+            
+            // UI Configuration
+            title: 'Smart AI Assistant',
+            subtitle: '🤖 Hi there! I\'m your AI assistant. How can I help you today?',
+            inputTextFieldHint: 'Type your message here...',
+            
+            // Appearance
+            primaryColor: '#6366f1',
+            hideWhenNotConnected: false,
+            connectOn: 'mount',
+            embedded: true,
+            
+            // Features
+            showFullScreenButton: false,
+            showMessageDate: true,
+            displayUnreadCount: true,
+            
+            // Avatar and branding
+            profileAvatar: 'https://img.icons8.com/color/96/000000/chatbot.png',
+            
+            // Storage
+            params: {
+              storage: 'session'
+            },
+            
+            // Callbacks
+            onSocketEvent: {
+              'connect': function() {
+                console.log('Connected to Rasa server');
+                setTimeout(() => {
+                  loadingScreen.style.display = 'none';
+                }, 1000);
+              },
+              'disconnect': function() {
+                console.log('Disconnected from Rasa server');
+              },
+              'connect_error': function(error) {
+                console.error('Connection error:', error);
+                loadingScreen.style.display = 'none';
+                errorMessage.style.display = 'block';
+              }
+            }
+          }, null);
+          
+        } catch (error) {
+          console.error('Error initializing webchat:', error);
+          loadingScreen.style.display = 'none';
+          errorMessage.style.display = 'block';
+        }
+      };
+      
+      script.onerror = function() {
+        console.error('Failed to load Rasa webchat script');
+        loadingScreen.style.display = 'none';
+        errorMessage.style.display = 'block';
+      };
+      
+      document.head.appendChild(script);
+      
+      // Auto-hide loading screen after 5 seconds as fallback
+      setTimeout(() => {
+        if (loadingScreen.style.display !== 'none') {
+          loadingScreen.style.display = 'none';
+        }
+      }, 5000);
+    })();
+  </script>
+</body>
+</html>
