@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart AI Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 450px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .chat-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .bot-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff6b6b, #feca57);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      font-size: 24px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .chat-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      font-weight: 400;
+    }
+
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.disconnected {
+      background: #ef4444;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .chat-container {
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+      background: #fafafa;
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot {
+      background: white;
+      color: #374151;
+      align-self: flex-start;
+      border: 1px solid #e5e7eb;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 25px;
+      outline: none;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .message-input:focus {
+      border-color: #6366f1;
+    }
+
+    .send-button {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .send-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .send-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      color: #6b7280;
+      font-size: 14px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #6b7280;
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 10px;
+        border-radius: 15px;
+      }
+      
+      .chat-container {
+        height: 450px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="chat-header">
+      <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connecting...</span>
+      </div>
+      <div class="header-content">
+        <div class="bot-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="chat-title">Smart AI Assistant</div>
+        <div class="chat-subtitle">Powered by Rasa • Always here to help</div>
+      </div>
+    </div>
+    
+    <div class="chat-container">
+      <div class="messages-container" id="messagesContainer">
+        <!-- Messages will be added here -->
+      </div>
+      
+      <div class="typing-indicator" id="typingIndicator">
+        <span>AI is typing</span>
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+      
+      <div class="input-container">
+        <input 
+          type="text" 
+          class="message-input" 
+          id="messageInput" 
+          placeholder="Type your message here..."
+          disabled
+        >
+        <button class="send-button" id="sendButton" disabled>
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    class ChatBot {
+      constructor() {
+        this.socket = null;
+        this.sessionId = this.generateSessionId();
+        this.messagesContainer = document.getElementById('messagesContainer');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendButton = document.getElementById('sendButton');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.statusDot = document.getElementById('statusDot');
+        this.statusText = document.getElementById('statusText');
+        
+        this.init();
+      }
+      
+      generateSessionId() {
+        return 'user_' + Math.random().toString(36).substr(2, 9);
+      }
+      
+      init() {
+        this.connectWebSocket();
+        this.setupEventListeners();
+      }
+      
+      connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/${this.sessionId}`;
+        
+        console.log('Connecting to:', wsUrl);
+        
+        try {
+          this.socket = new WebSocket(wsUrl);
+          
+          this.socket.onopen = (event) => {
+            console.log('WebSocket connected');
+            this.updateConnectionStatus(true);
+            this.messageInput.disabled = false;
+            this.sendButton.disabled = false;
+          };
+          
+          this.socket.onmessage = (event) => {
+            console.log('Received message:', event.data);
+            const message = JSON.parse(event.data);
+            this.displayMessage(message.message, 'bot', message.type);
+            this.hideTypingIndicator();
+          };
+          
+          this.socket.onclose = (event) => {
+            console.log('WebSocket disconnected', event);
+            this.updateConnectionStatus(false);
+            this.messageInput.disabled = true;
+            this.sendButton.disabled = true;
+            
+            // Try to reconnect after 3 seconds
+            setTimeout(() => {
+              console.log('Attempting to reconnect...');
+              this.connectWebSocket();
+            }, 3000);
+          };
+          
+          this.socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.updateConnectionStatus(false);
+            this.displayMessage('Connection error. Retrying...', 'bot', 'error');
+          };
+          
+        } catch (error) {
+          console.error('Failed to create WebSocket:', error);
+          this.updateConnectionStatus(false);
+        }
+      }
+      
+      setupEventListeners() {
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        
+        this.messageInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            this.sendMessage();
+          }
+        });
+      }
+      
+      sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message || !this.socket || this.socket.readyState !== WebSocket.OPEN) {
+          console.log('Cannot send message:', {
+            hasMessage: !!message,
+            socketState: this.socket ? this.socket.readyState : 'null'
+          });
+          return;
+        }
+        
+        console.log('Sending message:', message);
+        
+        // Display user message
+        this.displayMessage(message, 'user');
+        
+        // Send to server
+        this.socket.send(JSON.stringify({ message: message }));
+        
+        // Clear input and show typing indicator
+        this.messageInput.value = '';
+        this.showTypingIndicator();
+      }
+      
+      displayMessage(text, sender, type = 'text') {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender);
+        
+        if (type === 'error') {
+          messageDiv.classList.add('error');
+        }
+        
+        messageDiv.textContent = text;
+        
+        this.messagesContainer.appendChild(messageDiv);
+        this.scrollToBottom();
+      }
+      
+      showTypingIndicator() {
+        this.typingIndicator.style.display = 'flex';
+        this.scrollToBottom();
+      }
+      
+      hideTypingIndicator() {
+        this.typingIndicator.style.display = 'none';
+      }
+      
+      updateConnectionStatus(connected) {
+        if (connected) {
+          this.statusDot.classList.remove('disconnected');
+          this.statusText.textContent = 'Online';
+        } else {
+          this.statusDot.classList.add('disconnected');
+          this.statusText.textContent = 'Reconnecting...';
+        }
+      }
+      
+      scrollToBottom() {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+      }
+    }
+    
+    // Initialize chatbot when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Initializing chatbot...');
+      new ChatBot();
+    });
+  </script>
+</body>
+</html>
