@@ -101,6 +101,11 @@
       animation: pulse 2s infinite;
     }
 
+    .status-dot.disconnected {
+      background: #ef4444;
+      animation: none;
+    }
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
@@ -108,60 +113,132 @@
 
     .chat-container {
       height: 500px;
-      position: relative;
-      background: #fafafa;
-    }
-
-    #webchat {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    .loading-screen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #fafafa;
       display: flex;
       flex-direction: column;
+      background: #fafafa;
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot {
+      background: white;
+      color: #374151;
+      align-self: flex-start;
+      border: 1px solid #e5e7eb;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .message-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 25px;
+      outline: none;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .message-input:focus {
+      border-color: #6366f1;
+    }
+
+    .send-button {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top: 3px solid #6366f1;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 15px;
+    .send-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .send-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
 
-    .loading-text {
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
       color: #6b7280;
       font-size: 14px;
-      font-weight: 500;
+      padding: 12px 16px;
+      margin-bottom: 10px;
     }
 
-    .error-message {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      color: #ef4444;
-      font-size: 14px;
-      display: none;
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #6b7280;
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
     }
 
     @media (max-width: 480px) {
@@ -180,8 +257,8 @@
   <div class="container">
     <div class="chat-header">
       <div class="status-indicator">
-        <div class="status-dot"></div>
-        <span>Online</span>
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Connecting...</span>
       </div>
       <div class="header-content">
         <div class="bot-avatar">
@@ -193,109 +270,182 @@
     </div>
     
     <div class="chat-container">
-      <div class="loading-screen" id="loadingScreen">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Connecting to AI...</div>
+      <div class="messages-container" id="messagesContainer">
+        <!-- Messages will be added here -->
       </div>
-      <div class="error-message" id="errorMessage">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>Unable to connect to chatbot server</p>
-        <small>Please ensure Rasa server is running on localhost:5005</small>
+      
+      <div class="typing-indicator" id="typingIndicator">
+        <span>AI is typing</span>
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
       </div>
-      <div id="webchat"></div>
+      
+      <div class="input-container">
+        <input 
+          type="text" 
+          class="message-input" 
+          id="messageInput" 
+          placeholder="Type your message here..."
+          disabled
+        >
+        <button class="send-button" id="sendButton" disabled>
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
-    // Enhanced Rasa webchat integration
-    (function() {
-      const loadingScreen = document.getElementById('loadingScreen');
-      const errorMessage = document.getElementById('errorMessage');
+    class ChatBot {
+      constructor() {
+        this.socket = null;
+        this.sessionId = this.generateSessionId();
+        this.messagesContainer = document.getElementById('messagesContainer');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendButton = document.getElementById('sendButton');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.statusDot = document.getElementById('statusDot');
+        this.statusText = document.getElementById('statusText');
+        
+        this.init();
+      }
       
-      // Load Rasa webchat script
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/rasa-webchat@1.x.x/lib/index.js';
-      script.async = true;
+      generateSessionId() {
+        return 'user_' + Math.random().toString(36).substr(2, 9);
+      }
       
-      script.onload = function() {
+      init() {
+        this.connectWebSocket();
+        this.setupEventListeners();
+      }
+      
+      connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/${this.sessionId}`;
+        
+        console.log('Connecting to:', wsUrl);
+        
         try {
-          window.WebChat.default({
-            // Connection settings
-            socketUrl: 'http://localhost:5005',
-            socketPath: '/socket.io/',
+          this.socket = new WebSocket(wsUrl);
+          
+          this.socket.onopen = (event) => {
+            console.log('WebSocket connected');
+            this.updateConnectionStatus(true);
+            this.messageInput.disabled = false;
+            this.sendButton.disabled = false;
+          };
+          
+          this.socket.onmessage = (event) => {
+            console.log('Received message:', event.data);
+            const message = JSON.parse(event.data);
+            this.displayMessage(message.message, 'bot', message.type);
+            this.hideTypingIndicator();
+          };
+          
+          this.socket.onclose = (event) => {
+            console.log('WebSocket disconnected', event);
+            this.updateConnectionStatus(false);
+            this.messageInput.disabled = true;
+            this.sendButton.disabled = true;
             
-            // Initial setup
-            initPayload: '/greet',
-            customData: { 
-              language: 'en',
-              userId: 'user_' + Math.random().toString(36).substr(2, 9)
-            },
-            
-            // UI Configuration
-            title: 'Smart AI Assistant',
-            subtitle: '🤖 Hi there! I\'m your AI assistant. How can I help you today?',
-            inputTextFieldHint: 'Type your message here...',
-            
-            // Appearance
-            primaryColor: '#6366f1',
-            hideWhenNotConnected: false,
-            connectOn: 'mount',
-            embedded: true,
-            
-            // Features
-            showFullScreenButton: false,
-            showMessageDate: true,
-            displayUnreadCount: true,
-            
-            // Avatar and branding
-            profileAvatar: 'https://img.icons8.com/color/96/000000/chatbot.png',
-            
-            // Storage
-            params: {
-              storage: 'session'
-            },
-            
-            // Callbacks
-            onSocketEvent: {
-              'connect': function() {
-                console.log('Connected to Rasa server');
-                setTimeout(() => {
-                  loadingScreen.style.display = 'none';
-                }, 1000);
-              },
-              'disconnect': function() {
-                console.log('Disconnected from Rasa server');
-              },
-              'connect_error': function(error) {
-                console.error('Connection error:', error);
-                loadingScreen.style.display = 'none';
-                errorMessage.style.display = 'block';
-              }
-            }
-          }, null);
+            // Try to reconnect after 3 seconds
+            setTimeout(() => {
+              console.log('Attempting to reconnect...');
+              this.connectWebSocket();
+            }, 3000);
+          };
+          
+          this.socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.updateConnectionStatus(false);
+            this.displayMessage('Connection error. Retrying...', 'bot', 'error');
+          };
           
         } catch (error) {
-          console.error('Error initializing webchat:', error);
-          loadingScreen.style.display = 'none';
-          errorMessage.style.display = 'block';
+          console.error('Failed to create WebSocket:', error);
+          this.updateConnectionStatus(false);
         }
-      };
+      }
       
-      script.onerror = function() {
-        console.error('Failed to load Rasa webchat script');
-        loadingScreen.style.display = 'none';
-        errorMessage.style.display = 'block';
-      };
+      setupEventListeners() {
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        
+        this.messageInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            this.sendMessage();
+          }
+        });
+      }
       
-      document.head.appendChild(script);
-      
-      // Auto-hide loading screen after 5 seconds as fallback
-      setTimeout(() => {
-        if (loadingScreen.style.display !== 'none') {
-          loadingScreen.style.display = 'none';
+      sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message || !this.socket || this.socket.readyState !== WebSocket.OPEN) {
+          console.log('Cannot send message:', {
+            hasMessage: !!message,
+            socketState: this.socket ? this.socket.readyState : 'null'
+          });
+          return;
         }
-      }, 5000);
-    })();
+        
+        console.log('Sending message:', message);
+        
+        // Display user message
+        this.displayMessage(message, 'user');
+        
+        // Send to server
+        this.socket.send(JSON.stringify({ message: message }));
+        
+        // Clear input and show typing indicator
+        this.messageInput.value = '';
+        this.showTypingIndicator();
+      }
+      
+      displayMessage(text, sender, type = 'text') {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender);
+        
+        if (type === 'error') {
+          messageDiv.classList.add('error');
+        }
+        
+        messageDiv.textContent = text;
+        
+        this.messagesContainer.appendChild(messageDiv);
+        this.scrollToBottom();
+      }
+      
+      showTypingIndicator() {
+        this.typingIndicator.style.display = 'flex';
+        this.scrollToBottom();
+      }
+      
+      hideTypingIndicator() {
+        this.typingIndicator.style.display = 'none';
+      }
+      
+      updateConnectionStatus(connected) {
+        if (connected) {
+          this.statusDot.classList.remove('disconnected');
+          this.statusText.textContent = 'Online';
+        } else {
+          this.statusDot.classList.add('disconnected');
+          this.statusText.textContent = 'Reconnecting...';
+        }
+      }
+      
+      scrollToBottom() {
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+      }
+    }
+    
+    // Initialize chatbot when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Initializing chatbot...');
+      new ChatBot();
+    });
   </script>
 </body>
 </html>
