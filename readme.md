@@ -2,7 +2,7 @@
 
 ## Quick Start (Windows)
 1. Open Command Prompt/PowerShell
-2. Navigate to project: `cd "newone"`
+2. Navigate to project: `cd "chatbot-using-rasa"`
 3. Activate virtual environment: `venv\Scripts\activate`
 4. Run startup script: `run_chatbot.bat`
 5. Wait for all servers to start
@@ -27,4 +27,5 @@ CHATBOTPRO/
 - Start servers in order: Rasa → Actions → FastAPI
 - Wait between starting servers
 - Access via localhost:8000 (not 0.0.0.0:8000)
+
 
